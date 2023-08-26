@@ -225,14 +225,131 @@ router.get('/get-file/:id',async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+router.post('/add-friend/:friendEmail', async (req, res) => {
+  try {
+    const { friendEmail } = req.params;
+    const { userId } = req.body;
+
+    // Check if the user exists in the database
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Find the friend by their email
+    const friend = await User.findOne({ email: friendEmail });
+
+    if (!friend) {
+      return res.status(404).json({ message: 'Friend not found' });
+    }
+
+    // Check if the user is already friends with the specified friend
+    if (user.friends.includes(friend._id) || friend.friends.includes(userId)) {
+      return res.status(400).json({ message: 'Users are already friends' });
+    }
+
+    // Add the friend's ObjectId to the user's friends array
+    user.friends.push(friend._id);
+    friend.friends.push(userId);
+
+    await user.save();
+    await friend.save();
+
+    res.status(200).json({ message: 'Friend added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 router.use(bodyParser.json());
 
 // Route to run code and return output
 
+router.get('/users/:userId/friends', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Check if the user exists in the database
+    const user = await User.findById(userId).populate('friends', 'name _id');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Extract the friend names and user IDs from the populated 'friends' field
+    const friendsWithInfo = user.friends.map(friend => ({
+      name: friend.name,
+      userId: friend._id
+    }));
+
+    res.status(200).json({ friends: friendsWithInfo });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+router.post('/users/:userId/shared-files', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { fileId } = req.body;
+    console.log(userId);
+
+    // Check if the user exists in the database
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if the file exists
+    const file = await File.findById(fileId);
+
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    // Check if the file is already in the user's sharedFiles array
+    if (user.sharedFiles.includes(fileId)) {
+      return res.status(400).json({ message: 'File is already in shared files' });
+    }
+
+    // Push the fileId into the user's sharedFiles array
+    user.sharedFiles.push(fileId);
+
+    // Save the updated user document
+    await user.save();
+
+    res.status(200).json({ message: 'File added to shared files successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 
+router.get('/users/:userId/shared-files', async (req, res) => {
+  try {
+    const { userId } = req.params;
 
+    // Find the user by userId
+    const user = await User.findById(userId);
 
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Find the shared files for this user
+    const sharedFiles = await File.find({ _id: { $in: user.sharedFiles } });
+
+    res.status(200).json(sharedFiles);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 
 module.exports = router;

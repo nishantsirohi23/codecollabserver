@@ -19,7 +19,21 @@ const userSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'File'
     }
+  ],
+  sharedFiles: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'File'
+    }
+  ],
+  friends: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }
   ]
+  
+
 });
 
 const fileSchema = new mongoose.Schema({
