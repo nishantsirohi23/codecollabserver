@@ -10,6 +10,7 @@ const AWS = require('aws-sdk');
 const multer = require('multer');
 const bodyParser = require('body-parser');
 const { exec } = require('child_process'); 
+const fetch = require('node-fetch');
 
 
 // Configure AWS SDK
@@ -169,7 +170,7 @@ router.put('/update-file/:id',async (req, res) => {
       return res.status(404).json({ error: 'File not found' });
     }
     try{
-      const response = await fetch(`http://localhost:5500/api/get-file/${fileId}`);
+      const response = await fetch(`https://codecollabserver.onrender.com/api/get-file/${fileId}`);
         const data = await response.json();
         const file = data.file;
 
@@ -179,6 +180,7 @@ router.put('/update-file/:id',async (req, res) => {
     } catch(error){
       console.log(error);
     }
+    console.log(fileName);
 
     // Update the content in MongoDB
     file.body = newFileContent;
