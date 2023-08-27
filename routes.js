@@ -194,7 +194,7 @@ router.put('/update-file/:id',async (req, res) => {
     s3.upload(params1, async (error, data) => {
       if (error) {
         console.error('Error uploading to S3:', error);
-        return res.status(500).json({ error: 'Error uploading to S3' });
+        return res.status(500).json({ error: error });
       }
   
       console.log('File uploaded successfully:', data.Location);
